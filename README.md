@@ -1,41 +1,49 @@
 # VTIL-Sandbox
 
-VTIL-Sandbox is a local VTIL inspection tool with:
-- a C++ backend (`VTIL-Sandbox`) that parses uploaded `.vtil` routines and exposes JSON over HTTP
-- a Vue frontend (`VTIL-SandboxFrontend`) that visualizes blocks, CFG edges, and instruction details
+VTIL-Sandbox is a local VTIL exploration and editing environment made of:
 
-## Current Architecture
+- `VTIL-Sandbox` (C++ backend): deserializes `.vtil`, validates edits, and exposes JSON/bytes over HTTP
+- `VTIL-SandboxFrontend` (Vue 2 frontend): visual graph/instruction UI with schema-guided editing tools
+
+The project is designed for local workflow on `127.0.0.1`.
+
+## Architecture
 
 - Backend API: `http://127.0.0.1:8090`
-- Frontend dev server: `http://127.0.0.1:8080` (Vue CLI)
-- Data flow:
-  1. Frontend uploads `.vtil` bytes to backend
-  2. Backend deserializes VTIL and builds rich JSON (blocks, CFG, instructions, descriptor/operand metadata)
-  3. Frontend renders interactive block list, CFG view, and instruction inspector
+- Frontend dev server: `http://127.0.0.1:8080`
+- End-to-end flow:
+  1. Upload `.vtil` to `POST /api/upload`
+  2. Backend parses VTIL and exposes routine state/schema
+  3. Frontend renders blocks + CFG + instruction table
+  4. User applies edits (`/api/edit/*`) and can download updated bytes (`/api/download`)
 
 ## Repository Layout
 
-- `VTIL-Core/` - VTIL core libraries
-- `VTIL-Sandbox/` - C++ backend server
-- `VTIL-SandboxFrontend/` - Vue frontend UI
-- `CMakeLists.txt` - root build entry point
+- `VTIL-Core/`: VTIL core libraries and dependencies
+- `VTIL-Sandbox/`: backend server source (`main.cpp`)
+- `VTIL-SandboxFrontend/`: Vue frontend source
+- `CMakeLists.txt`: root build entry point
 
 ## Prerequisites
 
-- CMake 3.14+
-- MSVC (Windows)
-- Node.js + npm
+- Windows + MSVC toolchain
+- CMake `>= 3.14.5`
+- Node.js + npm (frontend)
 
 ## Quick Start
 
-### 1) Build backend
+### 1) Configure and build backend
 
 ```bat
 cmake -S . -B output -DVTIL_SANDBOX_BUILD_FRONTEND=OFF
 cmake --build output --config Release --target sandbox
 ```
 
-Tip: use `--config Debug` while actively debugging.
+Use `Debug` while iterating on backend logic:
+
+```bat
+cmake --build output --config Debug --target sandbox
+```
 
 ### 2) Run backend
 
@@ -43,14 +51,15 @@ Tip: use `--config Debug` while actively debugging.
 output\VTIL-Sandbox\Release\sandbox.exe
 ```
 
-If you built Debug instead, run:
+Debug build:
 
 ```bat
 output\VTIL-Sandbox\Debug\sandbox.exe
 ```
 
-Backend should listen on:
-- `http://127.0.0.1:8090`
+Expected log:
+
+- `Backend listening on http://127.0.0.1:8090`
 
 ### 3) Run frontend
 
@@ -60,44 +69,94 @@ npm install
 npm run serve
 ```
 
-Then open:
+Open:
+
 - `http://127.0.0.1:8080`
 
-## API Endpoints
+## Frontend Highlights
+
+- Toolbar with upload/download, manual refresh, and theme toggle
+- Connection status indicator (Connected/Offline)
+- Resizable two-pane layout (block list + detail pane)
+- CFG viewer with zoom in/out, 1:1 reset, fit-to-view, wheel zoom, and drag pan
+- Edge highlighting for incoming/outgoing edges of selected block
+- Instruction table with:
+  - search by VIP/mnemonic/text (priority-selectable)
+  - next/previous match navigation
+  - expandable descriptor/operand details
+  - pseudo-ASM preview panel
+- Editing workflows:
+  - Immediate operand editor (validated numeric input)
+  - Instruction editor with schema-guided mnemonic/operand validation + autocomplete
+- Poll-based routine refresh while backend is online
+
+## Backend API
+
+All endpoints are served from `http://127.0.0.1:8090`.
+
+### Health
 
 - `GET /health`
-  - basic readiness probe
+  - returns: `{ "ok": true }`
+
+### Routine state and schema
+
 - `GET /api/state`
-  - returns current routine state as JSON
+  - returns routine metadata, blocks, CFG edges, instructions, descriptors, and operand metadata
+- `GET /api/schema`
+  - returns editor schema derived from the loaded routine (mnemonics, discovered registers, and instruction descriptor rows)
+
+### Upload and download
+
 - `POST /api/upload?name=<filename>`
-  - body: raw `.vtil` bytes (`application/octet-stream`)
+  - content-type: `application/octet-stream`
+  - body: raw `.vtil` bytes
+- `GET /api/download`
+  - returns serialized `.vtil` bytes
+  - includes `Content-Disposition` filename
 
-## Frontend Features
+### Edit endpoints
 
-- block list + selection
-- CFG view with controls (`+`, `-`, `100%`, `Fit`)
-- incoming/outgoing edge highlighting for selected block
-- instruction search and jump (`VIP` / `mnemonic` / `text`) with configurable priority
-- expandable instruction rows with descriptor/operand inspector-style details
-- dark mode
+- `POST /api/edit/immediate?block=<vip>&instruction=<index>&operand=<index>&value=<num>`
+  - updates one immediate operand value
+  - `value` accepts decimal, hex (`0x...`), or negative
+- `POST /api/edit/instruction?block=<vip>&instruction=<index>`
+  - body: plain instruction text (for example `mov vr0, 0x10:64`)
+  - validates mnemonic + operand types against known descriptors/registers
 
-## Notes
+### Error behavior
 
-- This is currently designed for local use (loopback API).
-- Backend includes request size limits and timeout handling for safer local operation.
-- If backend is not running, frontend status shows API offline.
+- Validation or parse failures return `400` with `{ "ok": false, "error": "..." }`
+- Unknown route returns `404`
+- Internal exceptions return `500`
 
-## Development
+## Security and Limits
 
-Build frontend production bundle:
+- Loopback-only bind (`127.0.0.1`)
+- Request header limit: `64 KB`
+- Upload payload limit: `32 MB`
+- Per-client socket timeout: `15 s`
+- Max concurrent clients: `64`
+
+## Frontend Production Build
 
 ```bat
 cd VTIL-SandboxFrontend
 npm run build
 ```
 
-Build backend only:
+By configuration, frontend artifacts are emitted to:
+
+- `VTIL-Sandbox/builds/assets`
+
+## Optional CMake Frontend Target
+
+Root CMake exposes `VTIL_SANDBOX_BUILD_FRONTEND` (default `ON`) and a custom target:
+
+- `sandbox-frontend`
+
+Build it explicitly with:
 
 ```bat
-cmake --build output --config Release --target sandbox
+cmake --build output --config Release --target sandbox-frontend
 ```

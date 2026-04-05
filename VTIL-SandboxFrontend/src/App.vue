@@ -253,26 +253,49 @@ export default {
 
 </script>
 <style>
-html,
-body {
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
     height: 100%;
     margin: 0;
-    font-family: -apple-system, 'Segoe UI', Ubuntu, Arial, sans-serif;
-    background: #0b1220;
+    font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+    background: #0d1117;
+    -webkit-font-smoothing: antialiased;
 }
 #app {
     height: 100%;
 }
+
+
 #main {
-    --bg: #f4f6f8;
-    --panel: #ffffff;
-    --panel-2: #f8fafc;
-    --panel-border: #d1d5db;
-    --text: #0f172a;
-    --muted: #64748b;
-    --accent: #2563eb;
-    --accent-soft: #dbeafe;
-    --edge: #64748b;
+    --bg:            #f6f8fa;
+    --panel:         #ffffff;
+    --panel-2:       #f6f8fa;
+    --panel-3:       #eaeef2;
+    --panel-border:  #d0d7de;
+    --text:          #1f2328;
+    --muted:         #656d76;
+    --muted-2:       #9198a1;
+    --accent:        #0969da;
+    --accent-soft:   rgba(9, 105, 218, 0.08);
+    --accent-hover:  rgba(9, 105, 218, 0.12);
+    --accent-text:   #0969da;
+    --success:       #1a7f37;
+    --success-bg:    rgba(26, 127, 55, 0.08);
+    --danger:        #cf222e;
+    --danger-bg:     rgba(207, 34, 46, 0.08);
+    --warning:       #9a6700;
+    --edge:          #8c959f;
+    --edge-out:      #1a7f37;
+    --edge-in:       #9a6700;
+    --cfg-dot:       rgba(0,0,0,0.06);
+    --shadow-sm:     0 1px 3px rgba(27,31,36,0.12), 0 1px 2px rgba(27,31,36,0.08);
+    --shadow-md:     0 4px 12px rgba(27,31,36,0.15), 0 2px 4px rgba(27,31,36,0.1);
+    --shadow-xl:     0 16px 48px rgba(27,31,36,0.25);
+    --radius:        6px;
+    --radius-lg:     10px;
+    --mono:          'JetBrains Mono', 'Fira Code', Consolas, monospace;
+
     height: 100%;
     min-height: 100vh;
     display: flex;
@@ -280,21 +303,39 @@ body {
     overflow: hidden;
     color: var(--text);
     background: var(--bg);
+    font-size: 13px;
+    line-height: 1.5;
 }
+
 #main.theme-dark {
-    --bg: #0b1220;
-    --panel: #121a2b;
-    --panel-2: #0f172a;
-    --panel-border: #233148;
-    --text: #dbe7ff;
-    --muted: #9ab0cf;
-    --accent: #60a5fa;
-    --accent-soft: #1d355a;
-    --edge: #7c8ba6;
+    --bg:            #0d1117;
+    --panel:         #161b22;
+    --panel-2:       #1c2128;
+    --panel-3:       #21262d;
+    --panel-border:  #30363d;
+    --text:          #e6edf3;
+    --muted:         #8b949e;
+    --muted-2:       #6e7781;
+    --accent:        #58a6ff;
+    --accent-soft:   rgba(88, 166, 255, 0.1);
+    --accent-hover:  rgba(88, 166, 255, 0.18);
+    --accent-text:   #58a6ff;
+    --success:       #3fb950;
+    --success-bg:    rgba(63, 185, 80, 0.1);
+    --danger:        #f85149;
+    --danger-bg:     rgba(248, 81, 73, 0.1);
+    --warning:       #d29922;
+    --edge:          #484f58;
+    --edge-out:      #3fb950;
+    --edge-in:       #d29922;
+    --cfg-dot:       rgba(255,255,255,0.04);
+    --shadow-sm:     0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md:     0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3);
+    --shadow-xl:     0 16px 48px rgba(0,0,0,0.7);
 }
+
 #main-pane {
     position: relative;
-    top: auto;
     flex: 1;
     min-height: 0;
 }
