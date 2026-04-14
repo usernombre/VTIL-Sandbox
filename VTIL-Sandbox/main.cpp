@@ -932,7 +932,7 @@ bool edit_immediate_operand( vtil::vip_t block_vip, size_t instruction_index, si
 		return false;
 	}
 
-	vtil::basic_block* blk = blk_it->second;
+	vtil::basic_block* blk = blk_it->second.get();
 	if ( instruction_index >= blk->size() )
 	{
 		message_or_error = "instruction index out of range";
@@ -1062,7 +1062,7 @@ bool edit_instruction_text( vtil::vip_t block_vip, size_t instruction_index, con
 		return false;
 	}
 
-	vtil::basic_block* blk = blk_it->second;
+	vtil::basic_block* blk = blk_it->second.get();
 	if ( instruction_index >= blk->size() )
 	{
 		message_or_error = "instruction index out of range";
